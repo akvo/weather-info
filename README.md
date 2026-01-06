@@ -1,11 +1,11 @@
-# weather-info
+# akvo-weather-info
 
 A Python library to fetch weather data from multiple providers (OpenWeatherMap, WeatherAPI.com).
 
 ## Installation
 
 ```bash
-pip install weather-info
+pip install akvo-weather-info
 ```
 
 For development:
