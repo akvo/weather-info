@@ -36,6 +36,26 @@ All weather providers extend `WeatherService` (abstract base class in `services/
 
 Current implementations: `OpenWeatherMapService`, `WeatherAPIService`
 
+### OpenWeatherMap API Versions
+
+`OpenWeatherMapService` supports both API 2.5 (default) and OneCall API 3.0:
+
+```python
+# API 2.5 (default) - location-based queries
+service = OpenWeatherMapService()
+data = service.get_forecast_raw("Nairobi, Kenya")
+
+# OneCall API 3.0 - coordinate-based queries
+service = OpenWeatherMapService(api_version="3.0")
+data = service.get_onecall_raw(
+    lat=-1.2921,
+    lon=36.8219,
+    exclude=["minutely", "hourly", "daily", "alerts"]  # Optional
+)
+```
+
+**OneCall 3.0 exclude options:** `current`, `minutely`, `hourly`, `daily`, `alerts`
+
 ### Data Flow
 ```
 CLI (cli.py) → Service → API → WeatherData/Forecast models → Formatter → Output
