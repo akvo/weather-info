@@ -1,5 +1,10 @@
 # akvo-weather-info
 
+[![PyPI version](https://img.shields.io/pypi/v/akvo-weather-info.svg)](https://pypi.org/project/akvo-weather-info/)
+[![Python versions](https://img.shields.io/pypi/pyversions/akvo-weather-info.svg)](https://pypi.org/project/akvo-weather-info/)
+[![License](https://img.shields.io/github/license/akvo/weather-info.svg)](https://github.com/akvo/weather-info/blob/main/LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/akvo/weather-info.svg)](https://github.com/akvo/weather-info/releases)
+
 A Python library to fetch weather data from multiple providers (OpenWeatherMap, WeatherAPI.com, Google Weather).
 
 ## Installation
