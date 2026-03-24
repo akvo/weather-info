@@ -1,6 +1,6 @@
 # akvo-weather-info
 
-A Python library to fetch weather data from multiple providers (OpenWeatherMap, WeatherAPI.com).
+A Python library to fetch weather data from multiple providers (OpenWeatherMap, WeatherAPI.com, Google Weather).
 
 ## Installation
 
@@ -20,18 +20,20 @@ Create a `.env` file in your project root with API keys:
 ```
 OPENWEATHER=your_openweathermap_api_key
 WEATHERAPI=your_weatherapi_api_key
+GOOGLEWEATHER=your_google_maps_api_key
 ```
 
 Get API keys from:
 - OpenWeatherMap: https://openweathermap.org/api
 - WeatherAPI: https://www.weatherapi.com/
+- Google Maps Platform: https://developers.google.com/maps/documentation/weather
 
 ## Library Usage
 
 ### Basic Import
 
 ```python
-from weather.services import OpenWeatherMapService, WeatherAPIService
+from weather.services import OpenWeatherMapService, WeatherAPIService, GoogleWeatherService
 
 # Using OpenWeatherMap
 owm = OpenWeatherMapService()
@@ -43,6 +45,29 @@ print(f"Condition: {current.description}")
 wa = WeatherAPIService()
 current = wa.get_current("London")
 print(f"Temperature: {current.temperature}C")
+
+# Using Google Weather
+gw = GoogleWeatherService()
+current = gw.get_current("Tokyo")
+print(f"Temperature: {current.temperature}C")
+```
+
+### Query by Coordinates
+
+All services support coordinate-based queries:
+
+```python
+from weather.services import OpenWeatherMapService, GoogleWeatherService
+
+# OpenWeatherMap by coordinates
+owm = OpenWeatherMapService()
+current = owm.get_current_by_coords(lat=-6.2088, lon=106.8456)
+hourly = owm.get_forecast_hourly_by_coords(lat=-6.2088, lon=106.8456, hours=24)
+
+# Google Weather by coordinates (skips geocoding)
+gw = GoogleWeatherService()
+current = gw.get_current_by_coords(lat=51.5074, lon=-0.1278)
+daily = gw.get_forecast_daily_by_coords(lat=51.5074, lon=-0.1278, days=7)
 ```
 
 ### Get Forecast
@@ -117,33 +142,44 @@ text_output = format_text(current)
 ## CLI Usage
 
 ```bash
+# By location name
 python -m weather --service=<SERVICE> --location=<LOCATION> [--output=<FORMAT>] [--forecast=<TYPE>] [--raw]
+
+# By coordinates
+python -m weather --service=<SERVICE> --lat=<LAT> --lon=<LON> [--output=<FORMAT>] [--forecast=<TYPE>] [--raw]
 ```
 
 ### Arguments
 
 | Argument | Required | Values | Description |
 |----------|----------|--------|-------------|
-| `--service` | Yes | `owm`, `wa` | Weather service (`owm` = OpenWeatherMap, `wa` = WeatherAPI.com) |
-| `--location` | Yes | string | Location name (e.g., "Jakarta", "London,UK") |
+| `--service` | Yes | `owm`, `wa`, `gw` | Weather service (`owm` = OpenWeatherMap, `wa` = WeatherAPI.com, `gw` = Google Weather) |
+| `--location` | * | string | Location name (e.g., "Jakarta", "London,UK") |
+| `--lat` | * | float | Latitude (use with `--lon`) |
+| `--lon` | * | float | Longitude (use with `--lat`) |
 | `--output` | No | `text`, `json` | Output format (default: `text`) |
 | `--forecast` | No | `hour`, `day` | Forecast type. If omitted, shows current weather |
 | `--raw` | No | flag | Show raw API response without field mapping |
 
+\* Either `--location` OR both `--lat` and `--lon` are required.
+
 ### CLI Examples
 
 ```bash
-# Current weather
+# Current weather by location
 python -m weather --service=owm --location="Jakarta"
+
+# Current weather by coordinates
+python -m weather --service=gw --lat=-6.2088 --lon=106.8456
 
 # JSON output
 python -m weather --service=wa --location="London" --output=json
 
 # Hourly forecast
-python -m weather --service=wa --location="Tokyo" --forecast=hour
+python -m weather --service=gw --location="Tokyo" --forecast=hour
 
-# Daily forecast
-python -m weather --service=owm --location="New York" --forecast=day
+# Daily forecast by coordinates
+python -m weather --service=owm --lat=40.7128 --lon=-74.0060 --forecast=day
 
 # Raw API response
 python -m weather --service=owm --location="Jakarta" --raw --output=json
@@ -161,7 +197,8 @@ weather/
 ├── services/
 │   ├── base.py          # Abstract base class
 │   ├── openweathermap.py
-│   └── weatherapi.py
+│   ├── weatherapi.py
+│   └── google_weather.py
 └── formatters/
     ├── json_formatter.py
     ├── text_formatter.py

@@ -30,7 +30,10 @@ def _format_forecast_list(forecasts: list[Forecast]) -> str:
 
     lines = [f"Location: {forecasts[0].location}", ""]
     for forecast in forecasts:
-        time_str = forecast.forecast_time.strftime("%Y-%m-%d %H:%M") if forecast.forecast_time else "N/A"
+        if forecast.forecast_time:
+            time_str = forecast.forecast_time.strftime("%Y-%m-%d %H:%M")
+        else:
+            time_str = "N/A"
         lines.append(
             f"  {time_str}: {forecast.temperature:.1f}C, {forecast.description}, "
             f"Humidity: {forecast.humidity}%, Wind: {forecast.wind_speed:.1f} m/s"
