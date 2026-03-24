@@ -28,3 +28,12 @@ def get_weatherapi_key() -> str:
     if not key:
         raise ValueError("WEATHERAPI API key not found in .env file")
     return key
+
+
+def get_google_weather_key() -> str:
+    """Get Google Maps Weather API key from environment."""
+    load_config()
+    key = os.getenv("GOOGLEWEATHER")
+    if not key:
+        raise ValueError("GOOGLEWEATHER API key not found in .env file")
+    return key

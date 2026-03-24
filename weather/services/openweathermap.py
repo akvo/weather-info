@@ -188,3 +188,187 @@ class OpenWeatherMapService(WeatherService):
         response = self.client.get(self.ONECALL_URL, params=params)
         response.raise_for_status()
         return response.json()
+
+    # -------------------------------------------------------------------------
+    # Coordinate-based methods (API 2.5)
+    # -------------------------------------------------------------------------
+
+    def get_current_by_coords(
+        self, lat: float, lon: float, location_name: Optional[str] = None
+    ) -> WeatherData:
+        """Get current weather by coordinates.
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+            location_name: Optional display name for the location.
+
+        Returns:
+            WeatherData object with current conditions.
+        """
+        url = f"{self.BASE_URL}/weather"
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": self.api_key,
+            "units": "metric",
+        }
+        response = self.client.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        address = location_name or f"{data['name']}, {data['sys']['country']}"
+
+        return WeatherData(
+            location=address,
+            temperature=data["main"]["temp"],
+            feels_like=data["main"]["feels_like"],
+            humidity=data["main"]["humidity"],
+            description=data["weather"][0]["description"],
+            wind_speed=data["wind"]["speed"],
+            timestamp=datetime.fromtimestamp(data["dt"]),
+        )
+
+    def get_forecast_hourly_by_coords(
+        self,
+        lat: float,
+        lon: float,
+        hours: int = 24,
+        location_name: Optional[str] = None,
+    ) -> list[Forecast]:
+        """Get hourly forecast by coordinates (3-hour intervals).
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+            hours: Number of hours to forecast.
+            location_name: Optional display name for the location.
+
+        Returns:
+            List of Forecast objects.
+        """
+        url = f"{self.BASE_URL}/forecast"
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": self.api_key,
+            "units": "metric",
+        }
+        response = self.client.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        address = location_name or f"{data['city']['name']}, {data['city']['country']}"
+        forecasts = []
+        max_items = hours // 3
+
+        for item in data["list"][:max_items]:
+            forecast = Forecast(
+                location=address,
+                temperature=item["main"]["temp"],
+                feels_like=item["main"]["feels_like"],
+                humidity=item["main"]["humidity"],
+                description=item["weather"][0]["description"],
+                wind_speed=item["wind"]["speed"],
+                timestamp=datetime.now(),
+                forecast_time=datetime.fromtimestamp(item["dt"]),
+            )
+            forecasts.append(forecast)
+
+        return forecasts
+
+    def get_forecast_daily_by_coords(
+        self,
+        lat: float,
+        lon: float,
+        days: int = 7,
+        location_name: Optional[str] = None,
+    ) -> list[Forecast]:
+        """Get daily forecast by coordinates (approximated from 3-hour data).
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+            days: Number of days to forecast.
+            location_name: Optional display name for the location.
+
+        Returns:
+            List of Forecast objects.
+        """
+        url = f"{self.BASE_URL}/forecast"
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": self.api_key,
+            "units": "metric",
+        }
+        response = self.client.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        address = location_name or f"{data['city']['name']}, {data['city']['country']}"
+
+        daily_forecasts = {}
+        for item in data["list"]:
+            dt = datetime.fromtimestamp(item["dt"])
+            date_key = dt.date()
+            if date_key not in daily_forecasts or dt.hour == 12:
+                daily_forecasts[date_key] = item
+
+        forecasts = []
+        for date_key, item in list(daily_forecasts.items())[:days]:
+            forecast = Forecast(
+                location=address,
+                temperature=item["main"]["temp"],
+                feels_like=item["main"]["feels_like"],
+                humidity=item["main"]["humidity"],
+                description=item["weather"][0]["description"],
+                wind_speed=item["wind"]["speed"],
+                timestamp=datetime.now(),
+                forecast_time=datetime.fromtimestamp(item["dt"]),
+            )
+            forecasts.append(forecast)
+
+        return forecasts
+
+    def get_current_raw_by_coords(self, lat: float, lon: float) -> dict:
+        """Get raw API response for current weather by coordinates.
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+
+        Returns:
+            Raw JSON response.
+        """
+        url = f"{self.BASE_URL}/weather"
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": self.api_key,
+            "units": "metric",
+        }
+        response = self.client.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_forecast_raw_by_coords(self, lat: float, lon: float) -> dict:
+        """Get raw API response for forecast by coordinates.
+
+        Args:
+            lat: Latitude of the location.
+            lon: Longitude of the location.
+
+        Returns:
+            Raw JSON response.
+        """
+        url = f"{self.BASE_URL}/forecast"
+        params = {
+            "lat": lat,
+            "lon": lon,
+            "appid": self.api_key,
+            "units": "metric",
+        }
+        response = self.client.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
